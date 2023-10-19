@@ -7,7 +7,6 @@ import FormSection from './form';
 
 function App() {
   return (
-
     <FormSection/>
   );
 }

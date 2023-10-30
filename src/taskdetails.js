@@ -3,19 +3,38 @@ import React from "react";
 import "bootstrap/dist/css/bootstrap.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import InputGroup from "react-bootstrap/InputGroup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleXmark,
   faSquareCheck,
 } from "@fortawesome/free-regular-svg-icons";
+import ClockCount from "./clocktimer";
 
 function TaskInput() {
   const [tasks, setTasks] = useState([]);
   const [password, setPassword] = useState("");
+  const [displayTaskTab, setDisplayTaskTab] = useState(true);
+  const [displayTimeTab, setDisplayTimeTab] = useState(false);
+  const [fullTime, setFullTime] = useState("");
+  const [newDisplayFullDate, setNewDisplayFullDate] = useState("");
+
+  let displayTime;
 
   function displayTask() {
+    const presentDate = new Date();
+    const displayMonth = presentDate.getMonth() + 1;
+    const displayDate = presentDate.getDate();
+    const displayYear = presentDate.getFullYear();
+    const hours = presentDate.getHours().toString().padStart(2, "0");
+    const minutes = presentDate.getMinutes().toString().padStart(2, "0");
+    const seconds = presentDate.getSeconds().toString().padStart(2, "0");
+    const session = hours >= 12 ? "PM" : "AM";
+    let taskFullTime = `${hours}:${minutes}:${seconds} ${session}`;
+    let taskNewDisplayFullDate = ` ${displayDate}/${displayMonth}/${displayYear}`;
+    setFullTime(taskFullTime);
+    console.log(taskFullTime, taskNewDisplayFullDate);
     if (password !== "") {
       setTasks((prevTasks) => [
         ...prevTasks,
@@ -25,9 +44,12 @@ function TaskInput() {
         },
       ]);
 
+      setDisplayTaskTab(true);
+      setDisplayTimeTab(false);
       setPassword("");
     }
   }
+
   let completeTaskIdentifier = (index) => {
     let highlightedTasks = [...tasks];
     highlightedTasks[index].done = !highlightedTasks[index].done;
@@ -39,21 +61,45 @@ function TaskInput() {
     );
     setTasks(updatedTasks);
   };
-
+  displayTime = (fullTime, newDisplayFullDate) => {
+    console.log(fullTime, newDisplayFullDate);
+    setDisplayTaskTab(false);
+    setDisplayTimeTab(true);
+    if (password !== "") {
+      setTasks((prevTasks) => [
+        ...prevTasks,
+        {
+          timetext: fullTime + newDisplayFullDate,
+          done: false,
+        },
+      ]);
+    }
+  };
   return (
     <div>
-      <div className="centered-container" style={{ backgroundColor: "gold" }}>
+      <div style={{ backgroundColor: "gold" }}>
         <div
           className="container"
           style={{
-            display: "flex",
             justifyContent: "center",
             alignItems: "center",
             height: "100vh",
+            overflow: "hidden",
           }}
         >
+          <div
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              margin: "-300px",
+              marginLeft: "600px",
+            }}
+          >
+            <ClockCount />
+          </div>
+
           <div className="row justify-content-center align-items-center">
-            <div className="justify-content-center">
+            <div>
               <Form
                 style={{
                   width: "1200px",
@@ -105,7 +151,7 @@ function TaskInput() {
                         margin: "10px",
                       }}
                     >
-                      <div>{task.text}</div>
+                      <div>{displayTaskTab ? task.text : task.timetext}</div>
                       <div
                         style={{
                           display: "flex",
@@ -118,6 +164,7 @@ function TaskInput() {
                       >
                         <Button
                           className="w-5"
+                          onClick={displayTime}
                           style={{
                             width: "180px",
                             backgroundColor: "purple",

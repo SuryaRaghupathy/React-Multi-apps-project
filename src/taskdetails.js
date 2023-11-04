@@ -3,7 +3,7 @@ import React from "react";
 import "bootstrap/dist/css/bootstrap.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import InputGroup from "react-bootstrap/InputGroup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,37 +15,20 @@ import ClockCount from "./clocktimer";
 function TaskInput() {
   const [tasks, setTasks] = useState([]);
   const [password, setPassword] = useState("");
-  const [displayTaskTab, setDisplayTaskTab] = useState(true);
-  const [displayTimeTab, setDisplayTimeTab] = useState(false);
-  const [fullTime, setFullTime] = useState("");
-  const [newDisplayFullDate, setNewDisplayFullDate] = useState("");
-
-  let displayTime;
 
   function displayTask() {
-    const presentDate = new Date();
-    const displayMonth = presentDate.getMonth() + 1;
-    const displayDate = presentDate.getDate();
-    const displayYear = presentDate.getFullYear();
-    const hours = presentDate.getHours().toString().padStart(2, "0");
-    const minutes = presentDate.getMinutes().toString().padStart(2, "0");
-    const seconds = presentDate.getSeconds().toString().padStart(2, "0");
-    const session = hours >= 12 ? "PM" : "AM";
-    let taskFullTime = `${hours}:${minutes}:${seconds} ${session}`;
-    let taskNewDisplayFullDate = ` ${displayDate}/${displayMonth}/${displayYear}`;
-    setFullTime(taskFullTime);
-    console.log(taskFullTime, taskNewDisplayFullDate);
     if (password !== "") {
       setTasks((prevTasks) => [
         ...prevTasks,
         {
+          id: new Date(), // random number
           text: password,
-          done: false,
+          status: false,
+          timestamp: new Date(), // new Date()
+          showDetails: false, // false
         },
       ]);
 
-      setDisplayTaskTab(true);
-      setDisplayTimeTab(false);
       setPassword("");
     }
   }
@@ -61,20 +44,29 @@ function TaskInput() {
     );
     setTasks(updatedTasks);
   };
-  displayTime = (fullTime, newDisplayFullDate) => {
-    console.log(fullTime, newDisplayFullDate);
-    setDisplayTaskTab(false);
-    setDisplayTimeTab(true);
-    if (password !== "") {
-      setTasks((prevTasks) => [
-        ...prevTasks,
-        {
-          timetext: fullTime + newDisplayFullDate,
-          done: false,
-        },
-      ]);
-    }
+
+  const toggleTaskDetails = (id) => {
+    const selectedItemIndex = tasks.findIndex((task) => task.id === id);
+    let updatedTasks = [...tasks];
+    updatedTasks[selectedItemIndex].showDetails =
+      !updatedTasks[selectedItemIndex].showDetails;
+    setTasks(updatedTasks);
   };
+
+  const getTimeAndDate = (timestamp) => {
+    const date = new Date(timestamp);
+    const displayMonth = date.getMonth() + 1;
+    const displayDate = date.getDate();
+    const displayYear = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+    const session = hours >= 12 ? "PM" : "AM";
+    const taskFullTime = `${hours}:${minutes}:${seconds} ${session}`;
+    const taskNewDisplayFullDate = ` ${displayDate}/${displayMonth}/${displayYear}`;
+    return `${taskFullTime} ${taskNewDisplayFullDate}`;
+  };
+
   return (
     <div>
       <div style={{ backgroundColor: "gold" }}>
@@ -139,6 +131,7 @@ function TaskInput() {
                 <div className="input-text">
                   {tasks.map((task, index) => (
                     <div
+                      key={index + 1}
                       className="input-text-content"
                       style={{
                         display: "flex",
@@ -151,7 +144,11 @@ function TaskInput() {
                         margin: "10px",
                       }}
                     >
-                      <div>{displayTaskTab ? task.text : task.timetext}</div>
+                      <div>
+                        {task.showDetails
+                          ? getTimeAndDate(task.timestamp)
+                          : task.text}
+                      </div>
                       <div
                         style={{
                           display: "flex",
@@ -164,7 +161,7 @@ function TaskInput() {
                       >
                         <Button
                           className="w-5"
-                          onClick={displayTime}
+                          onClick={() => toggleTaskDetails(task.id)}
                           style={{
                             width: "180px",
                             backgroundColor: "purple",
